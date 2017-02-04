@@ -36,33 +36,21 @@ The total number of parameters of the network is 1,148,535 which seems high comp
 Various combinations of other convolutional, dense and dropout layers were experimented with, but none of them ever produced any improvements so were ultimately discarded from the final model. It's awesome how easy it is to define a network using Keras and trivially experiment with different ideas as mentioned.
 
 The following is a summary of the network architecture:
-____________________________________________________________________________________________________
-Layer (type)                     Output Shape          Param #     Connected to                     
-====================================================================================================
-lambda_1 (Lambda)                (None, 21, 64, 3)     0           lambda_input_1[0][0]             
-____________________________________________________________________________________________________
-convolution2d_1 (Convolution2D)  (None, 17, 60, 24)    1824        lambda_1[0][0]                   
-____________________________________________________________________________________________________
-convolution2d_2 (Convolution2D)  (None, 13, 56, 36)    21636       convolution2d_1[0][0]            
-____________________________________________________________________________________________________
-convolution2d_3 (Convolution2D)  (None, 9, 52, 48)     43248       convolution2d_2[0][0]            
-____________________________________________________________________________________________________
-convolution2d_4 (Convolution2D)  (None, 4, 25, 64)     27712       convolution2d_3[0][0]            
-____________________________________________________________________________________________________
-convolution2d_5 (Convolution2D)  (None, 1, 12, 64)     36928       convolution2d_4[0][0]            
-____________________________________________________________________________________________________
-flatten_1 (Flatten)              (None, 768)           0           convolution2d_5[0][0]            
-____________________________________________________________________________________________________
-dense_1 (Dense)                  (None, 1164)          895116      flatten_1[0][0]                  
-____________________________________________________________________________________________________
-dense_2 (Dense)                  (None, 100)           116500      dense_1[0][0]                    
-____________________________________________________________________________________________________
-dense_3 (Dense)                  (None, 50)            5050        dense_2[0][0]                    
-____________________________________________________________________________________________________
-dense_4 (Dense)                  (None, 10)            510         dense_3[0][0]                    
-____________________________________________________________________________________________________
-dense_5 (Dense)                  (None, 1)             11          dense_4[0][0]                    
-====================================================================================================
+
+| Layer (type) | Output Shape | Param # | Connected to |
+|--------------|--------------|---------|--------------|
+| lambda_1 (Lambda) | (None, 21, 64, 3) | 0 | lambda_input_1[0][0] |
+| convolution2d_1 (Convolution2D) | (None, 17, 60, 24) | 1824 | lambda_1[0][0] |
+| convolution2d_2 (Convolution2D) | (None, 13, 56, 36) | 21636 | convolution2d_1[0][0] |
+| convolution2d_3 (Convolution2D) | (None, 9, 52, 48)  | 43248 | convolution2d_2[0][0] |
+| convolution2d_4 (Convolution2D) | (None, 4, 25, 64)  | 27712 | convolution2d_3[0][0] |
+| convolution2d_5 (Convolution2D) | (None, 1, 12, 64)  | 36928 | convolution2d_4[0][0] |
+| flatten_1 (Flatten) | (None, 768) | 0 | convolution2d_5[0][0] |
+| dense_1 (Dense) | (None, 1164) | 895116 | flatten_1[0][0]|
+| dense_2 (Dense) | (None, 100)  | 116500 | dense_1[0][0]  |
+| dense_3 (Dense) | (None, 50)   | 5050   | dense_2[0][0]  |
+| dense_4 (Dense) | (None, 10)   | 510    | dense_3[0][0]  |
+| dense_5 (Dense) | (None, 1)    | 11     | dense_4[0][0]  |
 
 ## Training
 
