@@ -19,9 +19,13 @@ The generator loads data with the following procedure:
 4. downsamples the image to 1/5th in each dimension - the resulting image shape was (21, 64, 3)
 5. randomly flips the selected image and steering angle to help reduce the left-turn bias of the training data
 
+![Sample Preprocessed Image](preprocessed-image.png)
+
 If either the left or right camera image was selected, the input steering angle was corrected by subtracting or adding 0.11 from the recorded (center) steering angle. The approach ultimately seemed to help provide some pressure to keep the car from drifting around the road and kept it much closer to the center.
 
-The track consists mostly of left turns which results in training data that is heavily biased toward turning left. To combat this situation, the generator would randomly flip the input image along the vertical axis. The result is a better mix of left and right turn images.
+Although the track consists mostly of left turns, the Udacity provided training data does not have a left-turn bias as shown in the steering angle histogram in the following figure. Either the track was driven in both directions or the images were already flipped. Although it wasn't necessary to randomly flip training images to reduce the left-turn bias, it was still useful for generating augmented data.
+
+![Steering Angle Histogram](angle-histogram.png)
 
 Finally, it's interesting to point out that one of the most important factors in successfully getting all the way around the course was step #4 where the image was significantly downsampled. Perhaps the higher resolution data is too noisy and distracting for the network to successfully learn to control the car.
 
@@ -29,7 +33,9 @@ Finally, it's interesting to point out that one of the most important factors in
 
 This project uses a CCN model architecture similar to the Nvidia paper (http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf). The model takes an RGB image as input and produces the steering angle as the only output.
 
-The input layer of the model normalizes the image data to the range [-1, 1]. This layer is then followed by a series of 5 convolutional layers. Finally, the convolutional output is flattened and passed through a series of fully connected layers successively reducing the number of outputs, ultimately resulting in a single real value output as the predicted steering angle. The model uses "relu" activation throughout. 
+The input layer of the model normalizes the image data to the range [-1, 1]. This layer is then followed by a series of 5 convolutional layers. Finally, the convolutional output is flattened and passed through a series of fully connected layers successively reducing the number of outputs, ultimately resulting in a single real value output as the predicted steering angle. The model uses "relu" activation throughout.
+
+I didn't initially use dropout because it always appeared to reduce performance. However, the code review of my submission indicated that dropout was a rubrik requirement so I experimented with finding a way to include dropout without reducing the driving performance too much. Regardless of where in the network I added dropout, it generally caused the driving to be more erratic with more overcorrecting than when testing without dropout. However, I'm really glad that I kept experimenting because, despite the driving being less smooth than before, using dropout allowed the network to navigate the second test track perfectly. Without dropout, the model had failed within the first 10 seconds on the second track - so dropout ended up being a huge improvement after all.
 
 The total number of parameters of the network is 1,148,535 which seems high compared to the original Nvidia model, but subsampling wasn't possible on the first few convolutional layers once the input image had been downsampled as far as it was.
 
@@ -46,7 +52,8 @@ The following is a summary of the network architecture:
 | convolution2d_4 (Convolution2D) | (None, 4, 25, 64)  | 27712 | convolution2d_3[0][0] |
 | convolution2d_5 (Convolution2D) | (None, 1, 12, 64)  | 36928 | convolution2d_4[0][0] |
 | flatten_1 (Flatten) | (None, 768) | 0 | convolution2d_5[0][0] |
-| dense_1 (Dense) | (None, 1164) | 895116 | flatten_1[0][0]|
+| dropout_1 (Dropout) | (None, 1164) | 895116 | flatten_1[0][0] |
+| dense_1 (Dense) | (None, 1164) | 895116 | dropout_1[0][0] |
 | dense_2 (Dense) | (None, 100)  | 116500 | dense_1[0][0]  |
 | dense_3 (Dense) | (None, 50)   | 5050   | dense_2[0][0]  |
 | dense_4 (Dense) | (None, 10)   | 510    | dense_3[0][0]  |
@@ -56,8 +63,10 @@ The following is a summary of the network architecture:
 
 The training process was way too slow to perform on a laptop cpu so I opted to leverage an AWS g2.8xlarge instance to speed up the iterative process. Due to difficulties with creating quality training data, I ended up entirely relying on the Udacity sample training data that was provided.
 
-Using simple augmentation the generator produces 6 samples (3 camera angles x 2 random flip) per recorded training sample. I reserved 20% of the data for validation, though this is probably overkill since validaiton accuracy was not very indicative of how well the network would actually perfom in the simulator. Nonetheless, the loss would always settle down within the alotted 10 epochs. The model was trained using the "adam" optimizer using "mse" to calculate loss.
+Using simple augmentation the generator produces 6 samples (3 camera angles x 2 random flip) per recorded training sample. I reserved 20% of the data for validation, though this is probably overkill since validation accuracy was not very indicative of how well the network would actually perfom in the simulator. Nonetheless, the loss would always settle down within the about 23 epochs. The model was trained using the "adam" optimizer using "mse" to calculate loss.
 
 ## Results
 
 It was difficult to get the car to successfully drive all the way around the test track until the input images were drastically scaled down. As mentioned, many iterations of different network layers were attempted (more/different conv layers as well as dropout and batch normalization) but generally made little improvement and often worse perforance.
+
+The initial results without dropout looked more impressive when tested only on the first track. The steering was smooth and navigated the track perfectly. However, the second track caused the car to hit a wall within a few seconds. After adding dropout, the car was slightly erractic caused by over steering, but to my surprise was able to navigate both tracks perfectly. It is apparent that dropout did indeed reduce overfitting and resulted in a better generalized model.
